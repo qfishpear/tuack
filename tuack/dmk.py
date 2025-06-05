@@ -60,9 +60,16 @@ def main(argv):
 			gen_std = None
 			for user, codes in conf.get('users').items():
 				for code, info in codes.items():
-					if eval('100 ' + info.get('expected', '')) == True:
-						gen_std = (user, code)
-						break
+					expc = info.get('expected', '')
+					if type(expc) == str:
+						expc = [expc]
+					for e in expc:
+						if eval('100 ' + e) == True:
+							gen_std = (user, code)
+							break
+					else:
+						continue
+					break
 				if gen_std: break
 			if not gen_std: log.warning('没有找到任何可能像标程的代码，请配置conf.yaml的users字段。')
 		else:
@@ -107,7 +114,7 @@ def main(argv):
 
 					if base.system == 'Windows':
 						os.system(f'std.exe < {folder}/{case}.in > {folder}/{case}.ans')
-					elif base.system == "Linux":
+					else:
 						os.system(f'./std.exe < {folder}/{case}.in > {folder}/{case}.ans')
 
 					log.info(f"标程用时：{time.perf_counter() - t}")
