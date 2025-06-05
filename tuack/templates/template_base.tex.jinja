@@ -52,6 +52,9 @@
 		{{ _('Time:') }}
 		{{ tools.time_range(day['start time'], day['end time'], _('year'), _('month'), _('day')).replace('~', '$\\sim$').replace(' ', ' ') }}
 	}
+	\def\thedate{
+		{{ tools.date(day['start time'], _('year'), _('month'), _('day')).replace('~', '$\\sim$').replace(' ', ' ') }}
+	}
 {% endif %}
 
 {% if contest and 'place' in contest %}

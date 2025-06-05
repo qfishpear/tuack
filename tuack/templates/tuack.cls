@@ -89,6 +89,7 @@
 \tuack@definefontsize{yihao}{26bp}
 \tuack@definefontsize{xiaoyi}{24bp}
 \tuack@definefontsize{erhao}{22bp}
+\tuack@definefontsize{banxiaoer}{20bp}
 \tuack@definefontsize{xiaoer}{18bp}
 \tuack@definefontsize{sanhao}{16bp}
 \tuack@definefontsize{xiaosan}{15bp}

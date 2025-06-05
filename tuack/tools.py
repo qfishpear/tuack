@@ -103,7 +103,12 @@ def to_time(dttm):
 		#return datetime.strptime(dttm, '%Y-%m-%d %H:%M:%S%z')	#python2 兼容性不好，暂时不用时区了
 	except Exception as e:
 		return datetime.strptime(dttm[:-5], '%Y-%m-%d %H:%M:%S')
-	
+
+def date(start, year = '-', month = '-', day = ''):
+	st = datetime.strptime(start[:-5], '%Y-%m-%d %H:%M:%S')
+	ret = st.strftime('%Y%%sQAQ%m%%sQAQ%d%%s').replace('QAQ0', '').replace('QAQ', '') % (year, month, day)
+	return ret
+
 def time_range(start, end, year = '-', month = '-', day = ''):
 	st = datetime.strptime(start[:-5], '%Y-%m-%d %H:%M:%S')
 	ed = datetime.strptime(end[:-5], '%Y-%m-%d %H:%M:%S')
