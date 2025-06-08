@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import os
+import os, uuid
 import re
 import sys
 import json
@@ -692,7 +692,69 @@ def loj():
 			log.error(u'输出题目`%s`时发生错误`%s`，具体信息如上所示。' % (prob['name'], e))
 	if save_flag:
 		base.save_json(base.conf)
-		
+
+def domjudge():
+	global save_flag
+	save_flag = False
+	base.remkdir(base.work)
+	if base.conf.folder == 'contest':
+		for day in base.days():
+			os.makedirs(pjoin(base.work, day.route))
+	for prob in base.probs():
+		try:
+			os.makedirs(pjoin(base.work, prob.route))
+			os.makedirs(pjoin(base.work, prob.route, 'data'))
+			os.makedirs(pjoin(base.work, prob.route, 'data', 'secret'))
+			os.makedirs(pjoin(base.work, prob.route, 'data', 'sample'))
+			for cases, s_folder, t_folder in [
+				(prob.sample_cases, 'down', 'sample'),
+				(prob.test_cases, 'data', 'secret')
+			]:
+				for case in cases:
+					for suf in ('.in', '.ans'):
+						s_name = pjoin(prob.path, s_folder, str(case) + suf)
+						t_name = pjoin(base.work, prob.route, 'data', t_folder, str(case) + suf)
+						base.shutil_copy(s_name, t_name)
+				base.run_r(base.dos2unix, pjoin(base.work, prob.route, 'data', t_folder))
+			open(pjoin(base.work, prob.route, 'problem.yaml'), 'wb').write(base.dump_formats['yaml']({
+				'problem_format_version': '2023-07-draft',
+				'name': {
+					'en': prob.get('title', {}).get('en', prob.get('name', '')),
+					# 'zh': Voorbeeld probleem
+				},
+				'uuid': str(uuid.uuid4()),
+				'type': 'pass-fail',
+				'author': 'HDU',
+				'source': 'SCCPC 2025',
+				'source_url': '',
+				'license': '',
+				'rights_owner': '',
+				'limits': {
+					'time_multipliers': {
+						'ac_to_time_limit': 2.0,
+						'time_limit_to_tle': 1.5
+					},
+					'time_limit': prob.get('time limit', 1.0),
+					'time_resolution': 1.0,
+					'memory': prob.memory_limit().MB,
+					'output': 1024,
+					'code': 128,
+					'compilation_time': 60,
+					'compilation_memory': 2048,
+					'validation_time': 60,
+					'validation_memory': 2048,
+					'validation_output': 8
+				},
+				# 'validation': 'custom',
+				'keywords': [],
+				'languages': ['c', 'cpp', 'java', 'kotlin', 'python3']
+			}))
+		except Exception as e:
+			traceback.print_exc()
+			log.error(u'输出题目`%s`时发生错误`%s`，具体信息如上所示。' % (prob['name'], e))
+	if save_flag:
+		base.save_json(base.conf)
+
 work_list = {
 	'lemon' : lemon,
 	'arbiter' : arbiter,
@@ -701,7 +763,8 @@ work_list = {
 	'tsinsen-oj' : tsinsen_oj,
 	'tuoj-down' : tuoj_down,
 	'loj' : loj,
-	'ipuoj' : loj
+	'ipuoj' : loj,
+	'domjudge' : domjudge
 }
 
 if __name__ == '__main__':
