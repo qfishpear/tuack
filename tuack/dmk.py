@@ -13,8 +13,8 @@ from .base import log
 from . import base
 import yaml, os, time, sys, random
 
-folders = ['down', 'data']
-fmap = {'down' : 'samples', 'data' : 'data'}
+folders = ['down', 'data', 'pre']
+fmap = {'down' : 'samples', 'data' : 'data', 'pre' : 'pre'}
 
 class Getter:
 	def __init__(self, arg1, arg2):
