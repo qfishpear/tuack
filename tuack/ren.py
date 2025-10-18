@@ -108,7 +108,7 @@ def get_template(fname, lang = None):
 			'lang' : lang
 		}
 		try:
-			tra = gettext.translation('lang', os.getcwd() + '/tmp', [env['lang']])
+			tra = gettext.translation('lang', tmp_path, [env['lang']])
 			env['env'].install_gettext_translations(tra)
 		except FileNotFoundError as e:
 			log.warning(u'没有%s这种语言的翻译表可用。' % lang)
@@ -331,7 +331,7 @@ class Base(object):
 				self.context['vars']['sample_id'] = args[0]
 			if len(args) <= 1:
 				return ''
-		tra = gettext.translation('lang', os.getcwd() + '/tmp', [env['lang']])
+		tra = gettext.translation('lang', tmp_path, [env['lang']])
 		ret = tra.gettext(title)
 		if len(args) > 0:
 			try:
@@ -599,7 +599,7 @@ class Latex(Base):
 		self.context['compile'] = self.gen_compile()
 		self.context['water_mark'] = base.water_mark
 		if base.water_mark:
-			shutil.copy(base.water_mark, 'tmp/water_mark.' + base.water_mark.split('.')[-1])
+			shutil.copy(base.water_mark, pjoin(tmp_path, 'water_mark.' + base.water_mark.split('.')[-1]))
 		all_problem_statement = get_template('%s.tex.jinja' % base_templates[self.comp]).render(self.context)
 		try:
 			open(pjoin(tmp_path, 'problems.tex'), 'wb') \
@@ -610,6 +610,7 @@ class Latex(Base):
 				.write(all_problem_statement.encode('utf-8'))
 			raise e
 		log.info(u'开始使用xelatex渲染题面。')
+		back = os.getcwd()
 		os.chdir(tmp_path)
 		os.system('xelatex -interaction=batchmode problems.tex')
 		os.system('xelatex -interaction=batchmode problems.tex')
@@ -619,7 +620,7 @@ class Latex(Base):
 			os.system('xelatex problems.tex')
 		if not os.path.exists('problems.pdf'):
 			log.error(u'题面渲染失败，请检查`tmp`目录下各文件。')
-		os.chdir('..')
+		os.chdir(back)
 		shutil.copy(pjoin(tmp_path, 'problems.pdf'), self.result_path)
 
 	def ren_day(self):
