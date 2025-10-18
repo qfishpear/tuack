@@ -129,8 +129,9 @@ rjoin = lambda *args : '/'.join(args).strip('/')
 
 natsort_warned = None
 
+home_path = os.path.expanduser("~")
 try:
-	tool_path = (path if system == 'Windows' and not os.path.expanduser("~") else pjoin(os.path.expanduser("~"), '.tuack'))
+	tool_path = (path if system == 'Windows' and not home_path else pjoin(home_path, '.tuack'))
 except:
 	tool_path = path
 if not os.path.exists(tool_path):
@@ -142,6 +143,16 @@ elif system == 'Darwin':
 	format_checker_name = 'format-mac'
 else:
 	format_checker_name = 'format-linux'
+
+if system == 'Windows':
+	if home_path:
+		tmp_path = pjoin(home_path, '.tuack_tmp')
+	else:
+		tmp_path = pjoin(os.getcwd(), 'tmp')
+else:
+	tmp_path = '/tmp/tuack'
+if not os.path.exists(tmp_path):
+	os.makedirs(tmp_path)
 
 class Configure(dict):
 	'''

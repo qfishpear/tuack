@@ -16,7 +16,7 @@ from functools import wraps
 from threading import Timer
 import platform
 from . import base
-from .base import log, pjoin, rjoin
+from .base import log, pjoin, rjoin, tmp_path
 import traceback
 
 def time2float(inp):
@@ -166,9 +166,10 @@ else:
 	
 def compile(prob, name):
 	for lang, args in prob['compile'].items():
-		if os.path.exists(pjoin('tmp', name + '.' + lang)):
+		if os.path.exists(pjoin(tmp_path, name + '.' + lang)):
 			base.check_install(lang)
-			os.chdir('tmp')
+			back = os.getcwd()
+			os.chdir(tmp_path)
 			try:
 				ret = subprocess.call(
 					base.compilers[lang](name, args, base.macros[base.work], ml = prob.ml()),
@@ -180,7 +181,7 @@ def compile(prob, name):
 				with open('stderr', 'a') as f:
 					f.write(str(e))
 				ret = -1
-			os.chdir('..')
+			os.chdir(back)
 			if ret:
 				log.info('`' + name + '.' + lang + u'`编译失败，详情见`compile.log`。')
 				with open('compile.log', 'a') as f:
@@ -221,21 +222,22 @@ def test(prob, name):
 	for case in all_cases:
 		print('Case %s:%s  ' % (case['key'], case), end = '\r')
 		sys.stdout.flush()
-		shutil.copy(case.full() + '.in', pjoin('tmp', 'in'))
-		shutil.copy(case.full() + '.ans', pjoin('tmp', 'ans'))
+		shutil.copy(case.full() + '.in', pjoin(tmp_path, 'in'))
+		shutil.copy(case.full() + '.ans', pjoin(tmp_path, 'ans'))
 		for fname in ('in', 'ans'):
 			if not ('binary data' in prob and prob['binary data'] == True):
 				if base.system == 'Windows':
-					base.unix2dos(pjoin('tmp', fname))
+					base.unix2dos(pjoin(tmp_path, fname))
 				else:
-					base.dos2unix(pjoin('tmp', fname))
+					base.dos2unix(pjoin(tmp_path, fname))
 		if prob['type'] == 'program':
-			os.chdir('tmp')
+			back = os.getcwd()
+			os.chdir(tmp_path)
 			ret, time = run(name, prob['time limit'], prob['memory limit'], 'in', 'out', base.runners[lang])
-			os.chdir('..')
+			os.chdir(back)
 		elif prob['type'] == 'output':
-			if os.path.exists(pjoin('tmp', case['case'] + '.out')):
-				shutil.copy(pjoin('tmp', case['case'] + '.out'), pjoin('tmp', 'out'))
+			if os.path.exists(pjoin(tmp_path, case['case'] + '.out')):
+				shutil.copy(pjoin(tmp_path, case['case'] + '.out'), pjoin(tmp_path, 'out'))
 				ret = None
 				time = 0.0
 			else:
@@ -245,18 +247,18 @@ def test(prob, name):
 			log.error(u'错误的题目类型`%s`。' % prob['type'])
 			raise Exception('problem type error.')
 		if not ret:
-			if not os.path.exists(pjoin('tmp', 'out')):
+			if not os.path.exists(pjoin(tmp_path, 'out')):
 				ret = 'Output file does not exist.'
 				time = 0.0
 				score = 0.0
 			elif prob.chk:
-				shutil.copy(pjoin('bin', prob.route), pjoin('tmp', 'chk' + base.elf_suffix))
+				shutil.copy(pjoin('bin', prob.route), pjoin(tmp_path, 'chk' + base.elf_suffix))
 				open('100.0', 'w').write('100.0\n')
 				os.system('%s %s %s %s 100.0 tmp/score tmp/info' % (
-					pjoin('tmp', 'chk' + base.elf_suffix),
-					pjoin('tmp', 'in'),
-					pjoin('tmp', 'out'),
-					pjoin('tmp', 'ans')
+					pjoin(tmp_path, 'chk' + base.elf_suffix),
+					pjoin(tmp_path, 'in'),
+					pjoin(tmp_path, 'out'),
+					pjoin(tmp_path, 'ans')
 				))
 				os.remove('100.0')
 				try:
@@ -278,8 +280,8 @@ def test(prob, name):
 			else:
 				ret = os.system('%s %s %s > log' % (
 					base.diff_tool,
-					pjoin('tmp', 'ans'),
-					pjoin('tmp', 'out')
+					pjoin(tmp_path, 'ans'),
+					pjoin(tmp_path, 'out')
 				))
 				if ret == 0:
 					score = 1.0
@@ -295,9 +297,9 @@ def test(prob, name):
 		else:
 			score = 0.0
 			report = ret
-		while os.path.exists(pjoin('tmp', prob['name'] + '.out')):
+		while os.path.exists(pjoin(tmp_path, prob['name'] + '.out')):
 			try:
-				os.remove(pjoin('tmp', prob['name'] + '.out'))
+				os.remove(pjoin(tmp_path, prob['name'] + '.out'))
 			except:
 				pass
 		scores.append(score)
@@ -380,9 +382,9 @@ def test_problem(prob):
 					log.info(u'如果该程序是其他功能程序，例如数据生成器，请将该程序从配置文件中移除。')
 				if (not prob.all and match != 1 and not base.any_prefix(rjoin(prob.route, user, algo))):
 					continue
-				base.repeat(lambda : base.rmtree('tmp'))
+				# base.repeat(lambda : base.rmtree('tmp'))
 				if prob['type'] == 'program':
-					base.repeat(lambda : os.makedirs('tmp'))
+					# base.repeat(lambda : os.makedirs('tmp'))
 					try:
 						shutil.copy(path, pjoin('tmp', path.split('/')[-1]))
 					except Exception as e:
@@ -393,7 +395,7 @@ def test_problem(prob):
 				elif prob['type'] == 'output':
 					for i in range(20):
 						try:
-							shutil.copytree(path, 'tmp')
+							shutil.copytree(path, tmp_path, dirs_exist_ok = True)
 						except Exception as e:
 							time.sleep(1e-2)
 							log.error(u'测试输出文件包`%s`没有找到或复制失败，正在重试 %d / 20。' % (path, i + 1))
@@ -405,7 +407,7 @@ def test_problem(prob):
 						log.info(u'如果该文件包是测试输出，请确保该文件包存在；如果不是，请将其从`conf.*`中移除。')
 				log.info(u'测试程序 %s:%s:%s' % (prob['name'], user, algo))
 				scores, times, reports = test(prob, path.split('/')[-1].split('.')[0])
-				base.repeat(lambda : base.rmtree('tmp'))
+				# base.repeat(lambda : base.rmtree('tmp'))
 				tc = len(prob.test_cases)
 				score_map = {}
 				for i in range(tc):
