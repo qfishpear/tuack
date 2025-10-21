@@ -528,7 +528,8 @@ def load_json(path = '.', route = None):
 				if conf['folder'] == 'extend':
 					conf.folder = base_conf.folder
 				conf.set_default(os.path.basename(path))
-				conf.route = '' if route == None else rjoin(route, conf['name'])
+				conf.route = '.' if route == None else rjoin(route, conf['name'])
+				conf.full_path = os.path.abspath(conf.route)
 				if conf.folder == 'problem':
 					conf.set_score()
 				if 'subdir' in conf:
