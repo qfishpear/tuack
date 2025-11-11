@@ -1,20 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import os
-import re
-import sys
-import json
-import datetime
-import shutil
-import subprocess
-import time
-import signal
-import zipfile
-from multiprocessing import Process, Queue
-from functools import wraps
-from threading import Timer
-import platform
+import os, re, json, shutil, time
 from . import base
 from .base import log, pjoin
 
@@ -267,7 +254,11 @@ def ipuoj():
 def loj():
 	syzoj('loj')
 
-def data_folder(bpath = None):
+def data_folder(bpath = None, date_type = 'data'):
+	fd = {
+		'data' : 'data',
+		'samples' : 'down'
+	}.get(date_type)
 	if base.conf.folder != 'problem':
 		log.error(u'只能导入到一个problem的工程中。')
 		return
@@ -279,8 +270,8 @@ def data_folder(bpath = None):
 		idx[0] += 1
 	def save(path, iname, oname):
 		log.info(u'找到数据`%s/{%s,%s}`' % (path, iname, oname))
-		shutil.copyfile(pjoin(path, iname), pjoin(base.conf.path, 'data', str(idx[0]) + '.in'))
-		shutil.copyfile(pjoin(path, oname), pjoin(base.conf.path, 'data', str(idx[0]) + '.ans'))
+		shutil.copyfile(pjoin(path, iname), pjoin(base.conf.path, fd, str(idx[0]) + '.in'))
+		shutil.copyfile(pjoin(path, oname), pjoin(base.conf.path, fd, str(idx[0]) + '.ans'))
 		idx[0] += 1
 	re_inp = re.compile('(.*)input(.*)')
 	re_in = re.compile('(.*)in(.*)')
@@ -305,9 +296,9 @@ def data_folder(bpath = None):
 				scan(fpath)
 	scan(bpath)
 	from . import gen
-	base.run_exc(gen.work_list['data'])
+	base.run_exc(gen.work_list[date_type])
 
-def data_pack(suf, bpath = None):
+def data_pack(suf, bpath = None, date_type = 'data'):
 	import zipfile, tarfile, rarfile
 	packer = {
 		'zip' : zipfile.ZipFile,
@@ -326,11 +317,11 @@ def data_pack(suf, bpath = None):
 		bpath = base.args[0]
 	with packer(bpath) as z:
 		z.extractall('tmp')
-	data_folder('tmp')
+	data_folder('tmp', date_type)
 	time.sleep(.1)
 	base.rmtree('tmp')
 
-def data(bpath = None):
+def data(bpath = None, date_type = 'data'):
 	if base.conf.folder != 'problem':
 		log.error(u'只能导入到一个problem的工程中。')
 		return
@@ -345,23 +336,24 @@ def data(bpath = None):
 	if os.path.isfile(bpath):
 		for suf, tp in suffix:
 			if bpath.endswith(suf):
-				data_pack(tp, bpath)
+				data_pack(tp, bpath, date_type)
 				break
 		else:
 			log.error(u'暂时不支持的压缩包类型。')
 	else:
-		data_folder(bpath)
+		data_folder(bpath, date_type)
 
 work_list = {
 	'tsinsen-oj' : tsinsen_oj,
 	'loj' : loj,
-	'ipuoj' : ipuoj,
-	'data' : data,
-	'data-folder' : data_folder,
-	'data-zip' : lambda : data_pack('zip'),
-	'data-tar' : lambda : data_pack('tar'),
-	'data-rar' : lambda : data_pack('rar')
+	'ipuoj' : ipuoj
 }
+
+for tp in ['data', 'samples']:
+	work_list[tp] = lambda bp = None: data(bp, tp)
+	work_list[tp + '-folder'] = lambda bp = None: data(bp, tp)
+	for z in ['zip', 'tar', 'rar']:
+		work_list[tp + '-' + z] = lambda bp = None: data_pack(z, bp, tp)
 
 if __name__ == '__main__':
 	try:
@@ -379,6 +371,7 @@ if __name__ == '__main__':
 			log.info(u'  data-zip    在上述命令不好使的时候，强制指定是zip文件。')
 			log.info(u'  data-tar    在上述命令不好使的时候，强制指定是tar文件。')
 			log.info(u'  data-rar    在上述命令不好使的时候，强制指定是rar文件。')
+			log.info(u'  samples*    把上述命令的data换成samples用于处理样例。')
 	except base.NoFileException as e:
 		log.error(e)
 		log.info(u'尝试使用`python -m tuack.gen -h`获取如何生成一个工程。')
