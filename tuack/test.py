@@ -190,13 +190,13 @@ def compile(prob, name):
 					f.write(u'## 测试题目`%s`，编译失败代码名称`%s.%s`\n' % (prob['name'], name, lang))
 					try:
 						f.write(u'编译器输出的stdout为：\n')
-						f.write(open('tmp/stdout').read())
+						f.write(open(pjoin(tmp_path, 'stdout')).read())
 					except Exception as e:
 						f.write(u'编译器没有输出stdout，具体错误为：\n')
 						f.write(str(e) + '\n')
 					try:
 						f.write(u'编译器输出的stderr为：\n')
-						f.write(open('tmp/stderr').read())
+						f.write(open(pjoin(tmp_path, 'stderr')).read())
 					except Exception as e:
 						f.write(u'编译器没有输出stderr，具体错误为：\n')
 						f.write(str(e) + '\n')
@@ -254,11 +254,13 @@ def test(prob, name):
 			elif prob.chk:
 				shutil.copy(pjoin('bin', prob.route), pjoin(tmp_path, 'chk' + base.elf_suffix))
 				open('100.0', 'w').write('100.0\n')
-				os.system('%s %s %s %s 100.0 tmp/score tmp/info' % (
+				os.system('%s %s %s %s 100.0 %s %s' % (
 					pjoin(tmp_path, 'chk' + base.elf_suffix),
 					pjoin(tmp_path, 'in'),
 					pjoin(tmp_path, 'out'),
-					pjoin(tmp_path, 'ans')
+					pjoin(tmp_path, 'ans'),
+					pjoin(tmp_path, 'score'),
+					pjoin(tmp_path, 'info'),
 				))
 				os.remove('100.0')
 				try:
@@ -270,10 +272,10 @@ def test(prob, name):
 					shutil.remove(arbiter_out)
 				except Exception as e:
 					try:
-						report = open('tmp/info').read().strip()
+						report = open(pjoin(tmp_path, 'info')).read().strip()
 					except Exception as e:
 						report = ''
-					score = float(open('tmp/score').readline()) * .01
+					score = float(open(pjoin(tmp_path, 'score')).readline()) * .01
 				if time > prob['time limit']:
 					score = 0.0
 					report += '(but time out)'
@@ -386,7 +388,7 @@ def test_problem(prob):
 				if prob['type'] == 'program':
 					# base.repeat(lambda : os.makedirs('tmp'))
 					try:
-						shutil.copy(path, pjoin('tmp', path.split('/')[-1]))
+						shutil.copy(path, pjoin(tmp_path, path.split('/')[-1]))
 					except Exception as e:
 						log.error(u'程序`%s`没有找到。' % path)
 						log.info(e)
