@@ -264,7 +264,7 @@ def data_folder(bpath = None, data_type = 'data'):
 		return
 	if bpath is None:
 		bpath = base.args[0]
-	cases = set(base.conf.test_cases)
+	cases = set(base.conf.test_cases if data_type == 'data' else base.conf.sample_cases)
 	idx = [1]	# python2居然不支持nonlocal，只能用这种鬼畜方法实现闭包了
 	while idx[0] in cases or str(idx[0]) in cases:
 		idx[0] += 1
@@ -354,10 +354,10 @@ work_list['data'] = lambda bp = None: data(bp, 'data')
 work_list['data-folder'] = lambda bp = None: data_folder(bp, 'data')
 for z in ['zip', 'tar', 'rar']:
 	work_list['data-' + z] = lambda bp = None: data_pack(z, bp, 'data')
-work_list['sample'] = lambda bp = None: data(bp, 'sample')
-work_list['sample-folder'] = lambda bp = None: data_folder(bp, 'sample')
+work_list['samples'] = lambda bp = None: data(bp, 'samples')
+work_list['samples-folder'] = lambda bp = None: data_folder(bp, 'samples')
 for z in ['zip', 'tar', 'rar']:
-	work_list['sample-' + z] = lambda bp = None: data_pack(z, bp, 'sample')
+	work_list['samples-' + z] = lambda bp = None: data_pack(z, bp, 'samples')
 
 if __name__ == '__main__':
 	try:
