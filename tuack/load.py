@@ -254,11 +254,11 @@ def ipuoj():
 def loj():
 	syzoj('loj')
 
-def data_folder(bpath = None, date_type = 'data'):
+def data_folder(bpath = None, data_type = 'data'):
 	fd = {
 		'data' : 'data',
 		'samples' : 'down'
-	}.get(date_type)
+	}.get(data_type)
 	if base.conf.folder != 'problem':
 		log.error(u'只能导入到一个problem的工程中。')
 		return
@@ -296,9 +296,9 @@ def data_folder(bpath = None, date_type = 'data'):
 				scan(fpath)
 	scan(bpath)
 	from . import gen
-	base.run_exc(gen.work_list[date_type])
+	base.run_exc(gen.work_list[data_type])
 
-def data_pack(suf, bpath = None, date_type = 'data'):
+def data_pack(suf, bpath = None, data_type = 'data'):
 	import zipfile, tarfile, rarfile
 	packer = {
 		'zip' : zipfile.ZipFile,
@@ -317,11 +317,12 @@ def data_pack(suf, bpath = None, date_type = 'data'):
 		bpath = base.args[0]
 	with packer(bpath) as z:
 		z.extractall('tmp')
-	data_folder('tmp', date_type)
+	data_folder('tmp', data_type)
 	time.sleep(.1)
 	base.rmtree('tmp')
 
-def data(bpath = None, date_type = 'data'):
+def data(bpath = None, data_type = 'data'):
+	log.debug(f"in data{data_type=}")
 	if base.conf.folder != 'problem':
 		log.error(u'只能导入到一个problem的工程中。')
 		return
@@ -336,12 +337,12 @@ def data(bpath = None, date_type = 'data'):
 	if os.path.isfile(bpath):
 		for suf, tp in suffix:
 			if bpath.endswith(suf):
-				data_pack(tp, bpath, date_type)
+				data_pack(tp, bpath, data_type)
 				break
 		else:
 			log.error(u'暂时不支持的压缩包类型。')
 	else:
-		data_folder(bpath, date_type)
+		data_folder(bpath, data_type)
 
 work_list = {
 	'tsinsen-oj' : tsinsen_oj,
@@ -349,16 +350,20 @@ work_list = {
 	'ipuoj' : ipuoj
 }
 
-for tp in ['data', 'samples']:
-	work_list[tp] = lambda bp = None: data(bp, tp)
-	work_list[tp + '-folder'] = lambda bp = None: data(bp, tp)
-	for z in ['zip', 'tar', 'rar']:
-		work_list[tp + '-' + z] = lambda bp = None: data_pack(z, bp, tp)
+work_list['data'] = lambda bp = None: data(bp, 'data')
+work_list['data-folder'] = lambda bp = None: data_folder(bp, 'data')
+for z in ['zip', 'tar', 'rar']:
+	work_list['data-' + z] = lambda bp = None: data_pack(z, bp, 'data')
+work_list['sample'] = lambda bp = None: data(bp, 'sample')
+work_list['sample-folder'] = lambda bp = None: data_folder(bp, 'sample')
+for z in ['zip', 'tar', 'rar']:
+	work_list['sample-' + z] = lambda bp = None: data_pack(z, bp, 'sample')
 
 if __name__ == '__main__':
 	try:
 		if base.init() and len(base.args) != 0:
 			for base.work in base.works:
+				log.debug(base.work)
 				base.run_exc(work_list[base.work])
 		else:
 			log.info(u'这个工具用于导入其他类型的工程，参数1必须是来源路径。')
