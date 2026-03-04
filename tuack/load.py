@@ -322,7 +322,6 @@ def data_pack(suf, bpath = None, data_type = 'data'):
 	base.rmtree('tmp')
 
 def data(bpath = None, data_type = 'data'):
-	log.debug(f"in data{data_type=}")
 	if base.conf.folder != 'problem':
 		log.error(u'只能导入到一个problem的工程中。')
 		return
@@ -363,7 +362,6 @@ if __name__ == '__main__':
 	try:
 		if base.init() and len(base.args) != 0:
 			for base.work in base.works:
-				log.debug(base.work)
 				base.run_exc(work_list[base.work])
 		else:
 			log.info(u'这个工具用于导入其他类型的工程，参数1必须是来源路径。')
