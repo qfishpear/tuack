@@ -492,7 +492,9 @@ class Latex(Base):
 	}
 
 	def resource(self, name):
-		return pjoin(self.prob.full_path, 'resources', name).replace('\\', '/')
+		path = pjoin(self.prob.full_path, 'resources', name)
+		log.info(f"插入图片 {path}")
+		return path.replace('\\', '/')
 
 	def check_install(self):
 		base.check_install('pandoc')
