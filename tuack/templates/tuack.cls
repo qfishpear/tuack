@@ -2,7 +2,7 @@
 \ProvidesClass{tuack}
 
 
-\LoadClass[12pt,a4paper,fontset=windowsnew]{ctexart}
+\LoadClass[12pt,a4paper,fontset=windows]{ctexart}
 \usepackage{enumerate}
 \usepackage{graphicx,subfigure}
 \usepackage{amsmath,amsthm,amsfonts,amssymb,bm}
