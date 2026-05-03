@@ -113,7 +113,7 @@ def main(argv):
 					t = time.perf_counter()
 
 					if base.system == 'Windows':
-						os.system(f'std.exe < {folder}/{case}.in > {folder}/{case}.ans')
+						os.system(f'std.exe < {folder}\\{case}.in > {folder}\\{case}.ans')
 					else:
 						os.system(f'./std.exe < {folder}/{case}.in > {folder}/{case}.ans')
 
