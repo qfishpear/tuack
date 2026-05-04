@@ -517,7 +517,8 @@ def loj_prob(conf, pre = False):
 	}
 	def file_callback(m):
 		p = (m.bytes_read / m.len) * 100
-		print('上传 %.1f%%（%.1f KiB/%.1f KiB）    ' % (p, m.bytes_read / 1024, m.len / 1024), end = '\r')
+		m_len = len(str(m.len // 1024)) + 2
+		print(f"上传%5.1f%%（%{m_len}.1f KiB/%.1f KiB）    " % (p, m.bytes_read / 1024, m.len / 1024), end = '\r')
 		sys.stdout.flush()
 	def post(url, data = None, files = None):
 		if files:

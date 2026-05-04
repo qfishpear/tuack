@@ -13,6 +13,8 @@ def init():
 	#修改完conf以后需要保存
 	base.save_json(base.conf)
 
+# std = ('cdl', 'std') #指定用于生成ans的程序名称，为conf.yaml中users的结构
+
 from tuack import dmk
 #如果使用random库，dmk会自动保存第一次运行的种子信息，之后运行会生成相同的数据
 #如果需要重新随机，删除random_state即可
@@ -27,7 +29,48 @@ def gen(fin, args, cont):
 	tp = (cont['case'] if type(cont['case']) == int else int(cont['case'][-1])) & 1
 	#往fin中输出即可
 	fin.write(f"{n} {m}\n")
+	edges = {(1, n)}
 	for i in range(m - tp):
-		fin.write(f"{randint(1, n)} {randint(1, n)}\n")
+		while True:
+			u = randint(1, n)
+			v = randint(1, n)
+			if u != v and (u, v) not in edges:
+				break
+		edges.add((u, v))
+		fin.write(f"{u} {v}\n")
 	if tp:
-		fin.write('1 1\n')
+		fin.write(f'1 {n}\n')
+	fin.write(''.join([chr(ord('a') + randint(0, 25)) for i in range(n)]) + '\n')
+
+#以下是测试功能：
+#可以把gen定义为编译并执行某个程序
+# gen = dmk.Compile('cdl/gen.cpp')
+#还可以把gen定义为直接运行某个程序或命令
+# gen = dmk.Run('python cdl/gen.py')
+#运行时会依次传入下列参数到argv中：
+#1. 该测试点的args，按照conf中的定义顺序
+#2. 全局args中未出现在该测试点中的参数，同样按照conf中的定义顺序
+#3. 一个随机数种子，不改变代码时该种子不变
+#4. 测试点名称（cases中的名字）、测试点类型（down、data、pre）
+
+def vali(fin, args, cont):
+	import re
+	n = fin.int(args['n'])                  #单参数表示必须取等
+	m = fin.int(1, args['m'], end = '\n')   #双参数表示左闭右闭区间
+	#不加end表示后接严格一个空格，否则表示后接严格一个end
+	# m = fin.intN(1, args['m'])            #等价写法
+	#注意：行末空格的检验是严格的，因为做题人可能自己写特化的读入
+	edges = set()
+	for i in range(m):
+		u = fin.int(1, n)
+		v = fin.intN(1, n)
+		assert(u != v)
+		assert((u, v) not in edges)
+		edges.add((u, v))
+	#用正则表达式判断下一行是长度为n的小写字母串
+	assert(re.match(r'^[a-z]{%d}$' % n, fin.strN()))
+
+# vali = dmk.Compile('cdl/vali.cpp')
+# vali = dmk.Run('python cdl/vali.py')
+#validator也可以用类似于gen的方式调用
+#返回值为非0表示校验失败，错误信息可以直接输出到stdout
