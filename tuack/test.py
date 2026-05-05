@@ -222,8 +222,8 @@ def test(prob, name):
 	for case in all_cases:
 		print('Case %s:%s  ' % (case['key'], case), end = '\r')
 		sys.stdout.flush()
-		shutil.copy(base.existing_data_path(case.full(), '.in'), pjoin(tmp_path, 'in'))
-		shutil.copy(base.existing_data_path(case.full(), '.ans'), pjoin(tmp_path, 'ans'))
+		shutil.copy(case.full() + '.in', pjoin(tmp_path, 'in'))
+		shutil.copy(case.full() + '.ans', pjoin(tmp_path, 'ans'))
 		for fname in ('in', 'ans'):
 			if not ('binary data' in prob and prob['binary data'] == True):
 				if base.system == 'Windows':

@@ -1013,13 +1013,6 @@ def change_eol(path, eol, show_path = None):
 unix2dos = lambda path, show_path = None : change_eol(path, b'\r\n', show_path)
 dos2unix = lambda path, show_path = None : change_eol(path, b'\n', show_path)
 
-def existing_data_path(base_path, suffix):
-	for candidate in ([suffix, '.out'] if suffix == '.ans' else [suffix]):
-		path = base_path + candidate
-		if os.path.exists(path):
-			return path
-	return base_path + suffix
-
 wiki = lambda name : name
 
 def run_exc(func):
