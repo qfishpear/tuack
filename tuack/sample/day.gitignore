@@ -22,3 +22,5 @@ arbiter*
 *.0
 *.tmp
 loj
+ipuoj
+tmp*

@@ -644,7 +644,7 @@ def xopen_file(path):
 		log.info(e)
 
 def deal_args():
-	global do_copy_files, do_test_progs, do_release, works, start_file, do_pack, langs, lang, sub_set, out_system, args, do_zip, do_encript, do_render, time_multiplier, git_lfs, dump_format, user_time, water_mark, noi_pas_c
+	global do_copy_files, do_test_progs, do_release, works, start_file, do_pack, langs, lang, sub_set, out_system, args, do_zip, do_render, time_multiplier, git_lfs, dump_format, user_time, water_mark, noi_pas_c, edit_mode
 	do_render = True
 	works = []
 	args = []
@@ -654,12 +654,12 @@ def deal_args():
 	start_file = True
 	do_pack = True
 	do_zip = False
-	do_encript = False
 	git_lfs = False
 	user_time = False
 	dump_format = 'yaml'
 	water_mark = False
 	noi_pas_c = False
+	edit_mode = False
 	l = len(sys.argv)
 	i = 1
 	while i < l:
@@ -686,8 +686,7 @@ def deal_args():
 		elif sys.argv[i] == '-r':
 			do_render = False
 		elif sys.argv[i] == '-e':
-			do_zip = True
-			do_encript = True
+			edit_mode = True
 		elif sys.argv[i] == '-u':
 			user_time = True
 		elif sys.argv[i] == '-l':
@@ -722,7 +721,8 @@ def deal_args():
 			log.info(u'  -g                  对于gen，使用git-lfs。')
 			log.info(u'  -d json             对于gen，规定配置文件格式，支持json、yaml，默认yaml。')
 			log.info(u'  -u                  对于test，在linux下使用user time做测试，默认real time。')
-			
+			log.info(u'  -e                  对于ls，输出为可编辑后导入的格式。')
+			log.info(u'  -w edit.txt         对于ls，从导出的编辑文件中导入题目信息。')
 			return False
 		else:
 			if len(works) == 0:
@@ -1052,3 +1052,12 @@ def remkdir(name):
 	except Exception as e:
 		log.warning('Can\'t delete %s' % name)
 		log.warning(e)
+
+def open_wait(fname):
+	log.info(f"阻塞打开：{fname}")
+	if system == 'Darwin':
+		os.system(f'open -W --new "{fname}"')
+	elif system == 'Windows':
+		os.system(f'cmd /c start /wait "" "{fname}"')
+	else:
+		os.system(f'mimeopen "{fname}"')

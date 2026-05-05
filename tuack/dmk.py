@@ -108,6 +108,7 @@ class Fin(io.TextIOWrapper):
 		return self.float(a, b, '\n')
 
 def main(argv):
+	global skip
 	base.init()
 	skip = set()
 	flag = None
@@ -132,13 +133,20 @@ def main(argv):
 			flag = arg
 		else:
 			log.info(f"未知的传入信息{arg}。")
+	for prob in base.conf.probs():
+		back = os.getcwd()
+		log.info(f"切换到目录`{prob.path}`运行数据生成。")
+		os.chdir(prob.path)
+		problem(prob)
+		os.chdir(back)
+
+def problem(conf):
 	import gen
 	if 'init' not in skip:
 		if hasattr(gen, 'init'):
 			gen.init()
 		else:
 			log.info('没有init函数，跳过执行。')
-	conf = base.conf
 	std_exe = None
 	if 'compile' not in skip:
 		if not hasattr(gen, 'std'):
