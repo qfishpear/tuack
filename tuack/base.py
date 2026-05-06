@@ -874,7 +874,7 @@ def check_install(pack):
 			log.info(u'一般推荐用ssh方式克隆仓库，并用公私钥保证安全，添加密钥的方式一般仓库的git网页上能找到。')
 			raise NoInstalledException('git not found')
 	def check_git_lfs():
-		ret = os.system('git lfs version > /dev/null 2>&1')
+		ret = os.system('git lfs')
 		if ret != 0:
 			log.warning(u'git大文件系统lfs没有安装，如果工程使用了它你可能无法同步。')
 			log.info(u'因为有些评测数据比较大，所以一般要求用git lfs大文件系统（Large File System）管理评测数据（in/ans）')
@@ -950,7 +950,7 @@ def check_install(pack):
 			raise NoInstalledException('unrar not found')
 
 	def check_time():
-		ret = os.system('time -p true > /dev/null 2>&1')
+		ret = os.system('time ls')
 		if ret != 0:
 			log.warning(u'time未安装，将无法测试运行时间。')
 			log.warning(u'类Ubuntu用户可以用apt install time安装。')
