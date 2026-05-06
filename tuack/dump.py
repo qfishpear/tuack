@@ -713,7 +713,7 @@ def domjudge():
 			]:
 				for case in cases:
 					for suf in ('.in', '.ans'):
-						s_name = pjoin(prob.path, s_folder, str(case) + suf)
+						s_name = pjoin(prob.path, s_folder, str(case)) + suf
 						t_name = pjoin(base.work, prob.route, 'data', t_folder, str(case) + suf)
 						base.shutil_copy(s_name, t_name)
 				base.run_r(base.dos2unix, pjoin(base.work, prob.route, 'data', t_folder))
