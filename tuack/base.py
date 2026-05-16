@@ -718,6 +718,7 @@ def deal_args():
 			log.info(u'  -w logo.png         对于ren，给PDF添加水印，默认不添加。')
 			log.info(u'  --noi-pas-c         对于ren渲染noi格式，强制在封面添加pas和c。')
 			log.info(u'  -r                  对于dump，不先尝试渲染题面。')
+			log.info(u'  -g                  对于dump，不处理数据和预测试数据。')
 			log.info(u'  -g                  对于gen，使用git-lfs。')
 			log.info(u'  -d json             对于gen，规定配置文件格式，支持json、yaml，默认yaml。')
 			log.info(u'  -u                  对于test，在linux下使用user time做测试，默认real time。')

@@ -606,20 +606,20 @@ def loj_prob(conf, pre = False):
 		z.write(id, fname)
 		os.remove(id)
 	data_path = 'data' if not pre else 'pre'
-	with zipfile.ZipFile(pjoin(base.work, data_path, conf.route + '.zip'), 'w') as z:
-		for id in (conf.test_cases if not pre else conf.pre_cases):
-			pack(z, pjoin(conf.path, data_path), id + '.in', force_file = True)
-			pack(z, pjoin(conf.path, data_path), id + '.ans', force_file = True)
-		if os.path.exists(pjoin(conf.path, 'data', 'chk', 'chk.cpp')):
-			z.write(pjoin(conf.path, 'data', 'chk', 'chk.cpp'), 'spj_cpp.cpp')
-		if os.path.exists(pjoin(base.work, data_path, conf.route + '.yml')):
-			z.write(pjoin(base.work, data_path, conf.route + '.yml'), 'data.yml')
-		if conf.get('extra'):
-			for exname in conf['extra']:
-				z.write(pjoin(conf.path, 'extra', exname), exname)
-	files = [
-		('testdata', ("data.zip", open(pjoin(base.work, data_path, conf.route + '.zip'), "rb"))),
-	]
+	files = []
+	if not base.git_lfs:
+		with zipfile.ZipFile(pjoin(base.work, data_path, conf.route + '.zip'), 'w') as z:
+			for id in (conf.test_cases if not pre else conf.pre_cases):
+				pack(z, pjoin(conf.path, data_path), id + '.in', force_file = True)
+				pack(z, pjoin(conf.path, data_path), id + '.ans', force_file = True)
+			if os.path.exists(pjoin(conf.path, 'data', 'chk', 'chk.cpp')):
+				z.write(pjoin(conf.path, 'data', 'chk', 'chk.cpp'), 'spj_cpp.cpp')
+			if os.path.exists(pjoin(base.work, data_path, conf.route + '.yml')):
+				z.write(pjoin(base.work, data_path, conf.route + '.yml'), 'data.yml')
+			if conf.get('extra'):
+				for exname in conf['extra']:
+					z.write(pjoin(conf.path, 'extra', exname), exname)
+		files.append(('testdata', ("data.zip", open(pjoin(base.work, data_path, conf.route + '.zip'), "rb"))))
 	with zipfile.ZipFile(pjoin(base.work, 'resources', conf.route + '.zip'), 'w') as z:
 		try:
 			for name in os.listdir(pjoin(conf.path, 'resources')):
