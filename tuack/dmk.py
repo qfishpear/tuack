@@ -6,7 +6,7 @@ python -m tuack.dmk [开关]
                     i,init：初始化函数
                     c,compile：编译标程
                     g,gen：生成数据
-					v,vali：数据校验
+                    v,vali：数据校验
                     r,run：运行标程
 '''
 
@@ -33,15 +33,18 @@ class Run:
 	def __init__(self, path):
 		self.compiled = True
 		self.exe = path
+	def proc(self, args, **kwargs):
+		if ret := subprocess.run(args, **kwargs).returncode:
+			raise Exception(f"运行错误，返回值{ret}。")
 	def run(self, args = None, fin = sys.stdin, fout = sys.stdout):
 		if not self.compiled:
 			log.info(f"编译程序{self.path}")
-			subprocess.run([
-				'g++', self.path, '-o', self.exe, '-std=c++17', '-O2', '-Wall', '-Wextra',
-				f"-Wl,--stack={int(base.conf.ml().B)}" if platform.system() == 'Windows' else ''
-			])
+			self.proc(
+				['g++', self.path, '-o', self.exe, '-std=c++17', '-O2', '-Wall', '-Wextra'] +
+				([f"-Wl,--stack={int(base.conf.ml().B)}"] if base.system == 'Windows' else [])
+			)
 			self.compiled = True
-		subprocess.run([self.exe] + (args if args else []), stdin = fin, stdout = fout)
+		self.proc([self.exe] + (args if args else []), stdin = fin, stdout = fout)
 	def __call__(self, fin, args, cont):
 		self.run(list(args.arg1.values()) + [
 			val for key, val in args.arg2.items() if key not in args.arg1
