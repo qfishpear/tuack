@@ -2,9 +2,8 @@ help = u'''\
 用于造数据，把gen.py放在problem目录下，然后运行：
 python -m tuack.dmk [开关]
 具体写法在gen.py有相关说明。
--s i,compile,g,run  跳过若干个步骤不执行。
+-s init,g,v,run  跳过若干个步骤不执行。
                     i,init：初始化函数
-                    c,compile：编译标程
                     g,gen：生成数据
                     v,vali：数据校验
                     r,run：运行标程
@@ -12,21 +11,22 @@ python -m tuack.dmk [开关]
 
 from .base import log, pjoin
 from . import base
-import os, time, sys, random, traceback, uuid, platform, subprocess
+import os, time, sys, random, traceback, uuid, subprocess
 
 folders = ['down', 'data', 'pre']
 fmap = {'down' : 'samples', 'data' : 'data', 'pre' : 'pre'}
 
 class Getter:
-	def __init__(self, arg1, arg2):
+	def __init__(self, arg1, arg2, need_warn = True):
 		self.arg1 = arg1
 		self.arg2 = arg2
 		self.keys = set(arg1.keys()) | set(arg2.keys())
+		self.need_warn = need_warn
 	def __getitem__(self, key):
 		if key in self.keys: self.keys.remove(key)
 		return self.arg1.get(key, self.arg2.get(key, None))
 	def __del__(self):
-		if len(self.keys):
+		if len(self.keys) and self.need_warn:
 			log.warning(f"下列数据字段并未使用：{','.join(self.keys)}")
 
 class Run:
@@ -45,10 +45,14 @@ class Run:
 			)
 			self.compiled = True
 		self.proc([self.exe] + (args if args else []), stdin = fin, stdout = fout)
-	def __call__(self, fin, args, cont):
-		self.run(list(args.arg1.values()) + [
-			val for key, val in args.arg2.items() if key not in args.arg1
-		] + [random.randint(0, 2 ** 31 - 1)] + list(cont.values()), fin = fin)
+	def __call__(self, fout, args, cont, fin):
+		self.run(
+			list(args.arg1.values()) + [
+				val for key, val in args.arg2.items() if key not in args.arg1
+			] + [random.randint(0, 2 ** 31 - 1)] + list(cont.values()),
+			fin = fin or sys.stdin,
+			fout = fout or sys.stdout
+		)
 		args.keys = set()
 
 class Compile(Run):
@@ -123,7 +127,6 @@ def main(argv):
 			for key in arg.split(','):
 				skip.add({
 					'i' : 'init',
-					'c' : 'compile',
 					'g' : 'gen',
 					'v' : 'vali',
 					'r' : 'run'
@@ -150,31 +153,25 @@ def problem(conf):
 			gen.init()
 		else:
 			log.info('没有init函数，跳过执行。')
-	std_exe = None
-	if 'compile' not in skip:
-		if not hasattr(gen, 'std'):
-			log.info('没有std变量，将查找第一个expect能取到100的标程。')
-			gen_std = None
-			for user, codes in conf.get('users').items():
-				for code, info in codes.items():
-					expc = info.get('expected', '')
-					if type(expc) == str:
-						expc = [expc]
-					for e in expc:
-						if eval('100 ' + e) == True:
-							gen_std = (user, code)
-							break
-					else:
-						continue
-					break
-				if gen_std: break
-			if not gen_std: log.warning('没有找到任何可能像标程的代码，请配置conf.yaml的users字段。')
-		else:
-			gen_std = gen.std
-		if gen_std:
-			std_exe = Compile(conf.get('users')[gen_std[0]][gen_std[1]].get('path'))
-	if 'run' not in skip and not std_exe:
-		log.warning('没有std.exe，无法生成输出文件。')
+	if not hasattr(gen, 'std'):
+		gen.std = None
+		log.info('没有std变量，将查找第一个expect能取到100的标程。')
+		for user, codes in conf.get('users').items():
+			for code, info in codes.items():
+				expc = info.get('expected', '')
+				if type(expc) == str:
+					expc = [expc]
+				for e in expc:
+					if eval('100 ' + e) == True:
+						gen.std = (user, code)
+						break
+				else:
+					continue
+				break
+			if gen.std: break
+		if not gen.std: log.warning('没有找到任何可能像标程的代码，请配置conf.yaml的users字段。')
+	if not gen.std and type(gen.std) in {tuple, list, base.List}:
+		gen.std = Compile(conf.get('users')[gen.std[0]][gen.std[1]].get('path'))
 
 	if os.path.isfile('random_state'):
 		random.setstate(eval(open('random_state').read()))
@@ -208,12 +205,13 @@ def problem(conf):
 						try:
 							fin = Fin(open(path_in, 'rb'), encoding = 'utf-8')
 							gen.vali(
-								fin,
+								sys.stdout,
 								Getter(item.get('args', {}), conf.get('args', {})),
 								{
 									'case' : case,
 									'folder' : folder
-								}
+								},
+								fin
 							)
 							if not fin.next(True):
 								raise Exception('校验函数结束以后还有内容没有读入。')
@@ -223,9 +221,17 @@ def problem(conf):
 				elif not warnend_vali:
 					log.warning('没有数据校验函数vali，跳过数据校验。')
 					warnend_vali = True
-				if std_exe:
+				if gen.std:
 					t = time.perf_counter()
-					std_exe.run(fin = open(path_in), fout = open(path_ans, 'w'))
+					gen.std(
+						open(path_ans, 'w'),
+						Getter(item.get('args', {}), conf.get('args', {}), need_warn = False),
+						{
+							'case' : case,
+							'folder' : folder
+						},
+						open(path_in)
+					)
 					log.info(f"标程用时：{time.perf_counter() - t}")
 					ans = ' '.join([line.strip() for line in open(path_ans)])
 					if len(ans) > 100: 

@@ -13,8 +13,6 @@ def init():
 	#修改完conf以后需要保存
 	base.save_json(base.conf)
 
-# std = ('cdl', 'std') #指定用于生成ans的程序名称，为conf.yaml中users的结构
-
 from tuack import dmk
 #如果使用random库，dmk会自动保存第一次运行的种子信息，之后运行会生成相同的数据
 #如果需要重新随机，删除random_state即可
@@ -53,7 +51,8 @@ def gen(fin, args, cont):
 #3. 一个随机数种子，不改变代码时该种子不变
 #4. 测试点名称（cases中的名字）、测试点类型（down、data、pre）
 
-def vali(fin, args, cont):
+def vali(fout, args, cont, fin):
+	# fout是标准输出，可以忽略；该参数是为了调用模式的一致性
 	import re
 	n = fin.int(args['n'])                  #单参数表示必须取等
 	m = fin.int(1, args['m'], end = '\n')   #双参数表示左闭右闭区间
@@ -74,3 +73,11 @@ def vali(fin, args, cont):
 # vali = dmk.Run('python cdl/vali.py')
 #validator也可以用类似于gen的方式调用
 #返回值为非0表示校验失败，错误信息可以直接输出到stdout
+
+# std = ('cdl', 'std')
+#指定用于生成ans的程序名称，为conf.yaml中users的结构
+# std = dmk.Compile('cdl/std.cpp')
+# std = dmk.Run('python cdl/std.py')
+# def std(fout, args, cont, fin):
+#   pass
+#也可以和上述用法相同
