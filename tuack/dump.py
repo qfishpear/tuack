@@ -272,16 +272,24 @@ def arbiter_main(conf = None,daynum = 0):
 		probinfo['MEMLIMITS='] = int(prob.memory_limit().MB)
 		probinfo['SAMPLES='] = len(prob.test_cases)
 		score_per_case = 100 // len(prob.test_cases)
-		if not prob.packed and score_per_case * len(prob.test_cases) != 100:
-			log.warning(u'测试点数量不是100的约数，分数无法均分为整数。')
+		score_remainder = 100 - score_per_case * len(prob.test_cases)
+		if not prob.packed and score_remainder != 0:
+			log.warning(u'测试点数量不是100的约数，分数将按整数分配给前%d个测试点以保证总分为100。' % score_remainder)
+		score_map = [score_per_case + (1 if i < score_remainder else 0) for i in range(len(prob.test_cases))]
 		probinfo['CCL=c@gcc'] = ' -o %o %i ' + prob['compile'].get('c', '')
 		probinfo['CCL=cpp@g++'] = ' -o %o %i ' + prob['compile'].get('cpp', '')
 		probinfo['CCL=pas@fpc'] = ' %i ' + prob['compile'].get('pas', '')
 		idx = 0
+		case_offset = 0
 		for datum in prob.data:
-			if prob.packed and len(datum['cases']) > 1:
-				log.warning(u'Arbiter不支持打包评测，将把该包得分均分给包中各测试点，无法整除时总分将不正确。')
-			for case in datum['cases']:
+			if prob.packed:
+				if len(datum['cases']) > 1:
+					log.warning(u'Arbiter不支持打包评测，将把该包得分均分给包中各测试点，无法整除时总分将不正确。')
+				packed_score = int(round(datum['score']))
+				packed_base = packed_score // len(datum['cases'])
+				packed_rem = packed_score - packed_base * len(datum['cases'])
+				packed_marks = [packed_base + (1 if i < packed_rem else 0) for i in range(len(datum['cases']))]
+			for local_idx, case in enumerate(datum['cases']):
 			#for idx, case in enumerate(prob.test_cases, start = 1):
 				idx += 1
 				'''print('copyfile %s'%base.pjoin(prob.path,'data',case+'.in'))'''
@@ -295,9 +303,10 @@ def arbiter_main(conf = None,daynum = 0):
 					base.pjoin('arbiter', 'main','data',prob['name']+str(idx)+'.ans')
 				)
 				if prob.packed:
-					probinfo['MARK='+str(idx)+'@'] = str(int(datum['score'] / len(datum['cases'])))
+					probinfo['MARK='+str(idx)+'@'] = str(packed_marks[local_idx])
 				else:
-					probinfo['MARK='+str(idx)+'@'] = str(int(score_per_case))
+					probinfo['MARK='+str(idx)+'@'] = str(score_map[case_offset])
+					case_offset += 1
 		'''for idx, userdir in enumerate(prob['users'],start = 1):
 			for idx2, code in enumerate(prob['users'][userdir],start = 1):
 				dirname = prob['name']+'-'+str(idx)+str(idx2)
