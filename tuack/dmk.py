@@ -11,7 +11,7 @@ python -m tuack.dmk [开关]
 
 from .base import log, pjoin
 from . import base
-import os, time, sys, random, traceback, uuid, subprocess
+import os, time, sys, random, traceback, uuid, subprocess, json
 
 folders = ['down', 'data', 'pre']
 fmap = {'down' : 'samples', 'data' : 'data', 'pre' : 'pre'}
@@ -44,7 +44,7 @@ class Run:
 				([f"-Wl,--stack={int(base.conf.ml().B)}"] if base.system == 'Windows' else [])
 			)
 			self.compiled = True
-		self.proc([self.exe] + (args if args else []), stdin = fin, stdout = fout)
+		self.proc([self.exe] + ([json.dumps(arg) for arg in args] if args else []), stdin = fin, stdout = fout)
 	def __call__(self, fout, args, cont, fin):
 		self.run(
 			list(args.arg1.values()) + [
@@ -170,7 +170,7 @@ def problem(conf):
 				break
 			if gen.std: break
 		if not gen.std: log.warning('没有找到任何可能像标程的代码，请配置conf.yaml的users字段。')
-	if not gen.std and type(gen.std) in {tuple, list, base.List}:
+	if gen.std and type(gen.std) in {tuple, list}:
 		gen.std = Compile(conf.get('users')[gen.std[0]][gen.std[1]].get('path'))
 
 	if os.path.isfile('random_state'):
