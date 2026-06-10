@@ -9,8 +9,6 @@ import datetime
 import shutil
 import subprocess
 import time
-import signal
-import zipfile
 from multiprocessing import Process, Queue
 from functools import wraps
 from threading import Timer

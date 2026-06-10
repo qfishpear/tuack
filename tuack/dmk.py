@@ -45,7 +45,7 @@ class Run:
 			)
 			self.compiled = True
 		self.proc([self.exe] + ([json.dumps(arg) for arg in args] if args else []), stdin = fin, stdout = fout)
-	def __call__(self, fout, args, cont, fin):
+	def __call__(self, fout, args, cont, fin = None):
 		self.run(
 			list(args.arg1.values()) + [
 				val for key, val in args.arg2.items() if key not in args.arg1
