@@ -79,5 +79,22 @@ def vali(fout, args, cont, fin):
 # std = dmk.Compile('cdl/std.cpp')
 # std = dmk.Run('python cdl/std.py')
 # def std(fout, args, cont, fin):
-#   pass
+#   a, b = map(int, fin.readline().split(' '))
+#   fout.write(f"{a + b}\n")
 #也可以和上述用法相同
+
+# 增加一个regen功能，如果返回错误，则会重新调用gen和std
+# 如果你不需要这个功能，不定义regen变量或函数即可
+# 如果是外部调用版本，返回非零表示错误
+# 和前面的函数相比，argv的最后多一个输出文件名
+# 注意：输入文件用标准输入读，但输出文件需要你手动打开文件名对应的文件
+# regen = dmk.Compile('cdl/regen.cpp')
+# regen = dmk.Run('python cdl/regen.py')
+# 如果是python函数版本，raise Exception表示错误
+# python函数版本也多一个参数表示输出文件名
+# def regen(fout, args, cont, fin, ans_name):
+#   ans = int(open(ans_name).readline())
+#   if ans == 0:
+#     raise Exception('因为答案为0所以需要重造数据。')
+#   a, b = map(int, fin.readline().split())
+#   assert(a == b)

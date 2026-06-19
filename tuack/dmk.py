@@ -36,7 +36,7 @@ class Run:
 	def proc(self, args, **kwargs):
 		if ret := subprocess.run(args, **kwargs).returncode:
 			raise Exception(f"运行错误，返回值{ret}。")
-	def run(self, args = None, fin = sys.stdin, fout = sys.stdout):
+	def run(self, args = None, fin = sys.stdin, fout = sys.stdout, ans_name = None):
 		if not self.compiled:
 			log.info(f"编译程序{self.path}")
 			self.proc(
@@ -44,14 +44,21 @@ class Run:
 				([f"-Wl,--stack={int(base.conf.ml().B)}"] if base.system == 'Windows' else [])
 			)
 			self.compiled = True
-		self.proc([self.exe] + ([json.dumps(arg) for arg in args] if args else []), stdin = fin, stdout = fout)
-	def __call__(self, fout, args, cont, fin = None):
+		self.proc(
+			[self.exe] +
+			([json.dumps(arg) for arg in args] if args else []) +
+			([ans_name] if ans_name else []),
+			stdin = fin,
+			stdout = fout
+		)
+	def __call__(self, fout, args, cont, fin = None, ans_name = None):
 		self.run(
 			list(args.arg1.values()) + [
 				val for key, val in args.arg2.items() if key not in args.arg1
 			] + [random.randint(0, 2 ** 31 - 1)] + list(cont.values()),
 			fin = fin or sys.stdin,
-			fout = fout or sys.stdout
+			fout = fout or sys.stdout,
+			ans_name = ans_name
 		)
 		args.keys = set()
 
@@ -186,20 +193,54 @@ def problem(conf):
 				log.info(f'数据类型{folder}，测试点{case}。')
 				path_in = pjoin(folder, f"{case}.in")
 				path_ans = pjoin(folder, f"{case}.ans")
-				if hasattr(gen, 'gen'):
-					if 'gen' not in skip and not item['args'].get('manual'):
-						with open(path_in, 'w') as f:
-							gen.gen(
-								f,
-								Getter(item.get('args', {}), conf.get('args', {})),
+				while True:
+					if hasattr(gen, 'gen'):
+						if 'gen' not in skip and not item['args'].get('manual'):
+							with open(path_in, 'w') as f:
+								gen.gen(
+									f,
+									Getter(item.get('args', {}), conf.get('args', {})),
+									{
+										'case' : case,
+										'folder' : folder
+									}
+								)
+					elif not warnend_gen:
+						log.warning('没有数据生成函数gen，跳过数据生成。')
+						warnend_gen = True
+					if gen.std:
+						t = time.perf_counter()
+						gen.std(
+							open(path_ans, 'w'),
+							Getter(item.get('args', {}), conf.get('args', {}), need_warn = False),
+							{
+								'case' : case,
+								'folder' : folder
+							},
+							open(path_in)
+						)
+						log.info(f"标程用时：{time.perf_counter() - t}")
+						ans = ' '.join([line.strip() for line in open(path_ans)])
+						if len(ans) > 100: 
+							ans = ans[:100] + f"（省略{len(ans) - 100}个字符。）"
+						log.info('答案：' + ans)
+					if hasattr(gen, 'regen'):
+						try:
+							gen.regen(
+								sys.stdout,
+								Getter(item.get('args', {}), conf.get('args', {}), need_warn = False),
 								{
 									'case' : case,
 									'folder' : folder
-								}
+								},
+								open(path_in),
+								path_ans
 							)
-				elif not warnend_gen:
-					log.warning('没有数据生成函数gen，跳过数据生成。')
-					warnend_gen = True
+							break
+						except Exception as e:
+							log.error(f"regen通知数据报错信息为：{e}，将重造数据。")
+					else:
+						break
 				if hasattr(gen, 'vali'):
 					if 'vali' not in skip:
 						try:
@@ -221,22 +262,6 @@ def problem(conf):
 				elif not warnend_vali:
 					log.warning('没有数据校验函数vali，跳过数据校验。')
 					warnend_vali = True
-				if gen.std:
-					t = time.perf_counter()
-					gen.std(
-						open(path_ans, 'w'),
-						Getter(item.get('args', {}), conf.get('args', {}), need_warn = False),
-						{
-							'case' : case,
-							'folder' : folder
-						},
-						open(path_in)
-					)
-					log.info(f"标程用时：{time.perf_counter() - t}")
-					ans = ' '.join([line.strip() for line in open(path_ans)])
-					if len(ans) > 100: 
-						ans = ans[:100] + f"（省略{len(ans) - 100}个字符。）"
-					log.info('答案：' + ans)
 
 if __name__ == '__main__':
 	main(sys.argv[1:])
