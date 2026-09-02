@@ -39,10 +39,14 @@ class Run:
 	def run(self, args = None, fin = sys.stdin, fout = sys.stdout, ans_name = None):
 		if not self.compiled:
 			log.info(f"编译程序{self.path}")
-			self.proc(
-				['g++', self.path, '-o', self.exe, '-std=c++17', '-O2', '-Wall', '-Wextra'] +
-				([f"-Wl,--stack={int(base.conf.ml().B)}"] if base.system == 'Windows' else [])
-			)
+			try:
+				self.proc(
+					['g++', self.path, '-o', self.exe, '-std=c++17', '-O2', '-Wall', '-Wextra'] +
+					([f"-Wl,--stack={int(base.conf.ml().B)}"] if base.system == 'Windows' else [])
+				)
+			except Exception as e:
+				log.error(f"编译错误：{e}，停止接下来的运行。")
+				sys.exit(0)
 			self.compiled = True
 		self.proc(
 			[self.exe] +
@@ -236,6 +240,7 @@ def problem(conf):
 								open(path_in),
 								path_ans
 							)
+							log.info('regen运行后无报错，不用重造数据。')
 							break
 						except Exception as e:
 							log.error(f"regen通知数据报错信息为：{e}，将重造数据。")

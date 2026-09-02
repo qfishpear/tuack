@@ -50,6 +50,9 @@ def gen(fin, args, cont):
 #2. 全局args中未出现在该测试点中的参数，同样按照conf中的定义顺序
 #3. 一个随机数种子，不改变代码时该种子不变
 #4. 测试点名称（cases中的名字）、测试点类型（down、data、pre）
+#例如data:[args:{n:1,m:2}],args:{n:3,q:tree}，可能传入的参数依次是
+#./std.exe 1 2 "tree" 666 13 "pre"
+#其中"tree"包含引号，n选择更小范围的1传入，666是随机数种子，13是第13组数据
 
 def vali(fout, args, cont, fin):
 	# fout是标准输出，可以忽略；该参数是为了调用模式的一致性
@@ -86,7 +89,7 @@ def vali(fout, args, cont, fin):
 # 增加一个regen功能，如果返回错误，则会重新调用gen和std
 # 如果你不需要这个功能，不定义regen变量或函数即可
 # 如果是外部调用版本，返回非零表示错误
-# 和前面的函数相比，argv的最后多一个输出文件名
+# 和前面的函数相比，argv的最后多一个输出文件名（这个不会多加引号）
 # 注意：输入文件用标准输入读，但输出文件需要你手动打开文件名对应的文件
 # regen = dmk.Compile('cdl/regen.cpp')
 # regen = dmk.Run('python cdl/regen.py')
