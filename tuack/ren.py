@@ -468,7 +468,7 @@ class Base(object):
 			self.start_file()
 
 	def final(self):
-		base.rmtree(tmp_path, ignore_errors = True)
+		pass
 
 	def run(self):
 		self.check_install()
@@ -614,12 +614,9 @@ class Latex(Base):
 		log.info(u'开始使用xelatex渲染题面。')
 		back = os.getcwd()
 		os.chdir(tmp_path)
-		os.system('xelatex -interaction=batchmode problems.tex')
-		os.system('xelatex -interaction=batchmode problems.tex')
-		if not os.path.exists('problems.pdf'):
-			log.warning(u'题面渲染失败，尝试使用关闭静默模式渲染。')
-			os.system('xelatex problems.tex')
-			os.system('xelatex problems.tex')
+		xelatex = 'xelatex -no-shell-escape -interaction=nonstopmode -halt-on-error problems.tex'
+		if os.system(xelatex) == 0:
+			os.system(xelatex)
 		if not os.path.exists('problems.pdf'):
 			log.error(u'题面渲染失败，请检查`tmp`目录下各文件。')
 		os.chdir(back)

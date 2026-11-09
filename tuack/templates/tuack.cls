@@ -6,6 +6,8 @@
 \usepackage{enumerate}
 \usepackage{graphicx,subfigure}
 \usepackage{amsmath,amsthm,amsfonts,amssymb,bm}
+\usepackage{physics}
+\usepackage[export]{adjustbox}
 \usepackage{longtable,multirow}
 \usepackage{color,xcolor}
 \usepackage{ifthen}
@@ -50,6 +52,12 @@
 \renewcommand{\baselinestretch}{1.3}
 
 
+%% MathJax html 扩展的命令：只输出内容
+\providecommand{\class}[2]{#2}
+\providecommand{\cssId}[2]{#2}
+\providecommand{\style}[2]{#2}
+
+
 %% 不显示章节标号
 \renewcommand\thesection{}
 \renewcommand\thesubsection{}
@@ -63,14 +71,14 @@
 
 %% 页眉页脚
 \pagestyle{fancy}
-\renewcommand{\headheight}{20pt}
+\setlength{\headheight}{20pt}
 \renewcommand{\headrulewidth}{0.2pt}
 \renewcommand{\footrulewidth}{0pt}
 
 \fancypagestyle{Cover}{
     \fancyhead{}
 	\fancyfoot{}
-	\renewcommand{\headheight}{0pt}
+	\setlength{\headheight}{0pt}
     \renewcommand{\headrulewidth}{0pt}
 	\renewcommand{\footrulewidth}{0pt}
 }
@@ -150,7 +158,7 @@
 
 % math related
 \DeclareMathOperator{\xor}{xor}
-\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+% \abs comes from physics
 
 
 % hyperref

@@ -176,7 +176,7 @@
 	\hline
 		测试点是否等分
 		{%- for prob in probs -%}
-			& {{ _("yes") if not prob.packed else _("no") }}
+			& {{ _("yes") if prob['equal score'] else _("no") }}
 		{%- endfor -%}
 		\tabularnewline
 	\hline
